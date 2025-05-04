@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 const locations = [
   "New York",
@@ -27,11 +28,6 @@ const skillsList = [
   "Python",
 ];
 
-const loggedInUser = {
-  name: "Healthfirst",
-  role: "company",
-};
-
 const CompanyListPage = () => {
   const [filters, setFilters] = useState({
     rating: "",
@@ -46,6 +42,17 @@ const CompanyListPage = () => {
   const [loading, setLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [loggedInUser, setLoggedInUser] = useState(null);
+
+  const navigate = useNavigate();
+
+  // ✅ Get user from localStorage
+  useEffect(() => {
+    const storedUser = localStorage.getItem("user");
+    if (storedUser) {
+      setLoggedInUser(JSON.parse(storedUser));
+    }
+  }, []);
 
   const fetchJobs = async (page = 1) => {
     setLoading(true);
@@ -66,6 +73,7 @@ const CompanyListPage = () => {
       sortBy,
       page: page,
       limit: 9,
+      user_id: loggedInUser?._id, // ✅ Add user_id here if available
     };
 
     try {
@@ -102,8 +110,10 @@ const CompanyListPage = () => {
   }, [filters, sortBy]);
 
   useEffect(() => {
-    fetchJobs(currentPage);
-  }, [filters, sortBy, currentPage]);
+    if (loggedInUser !== null) {
+      fetchJobs(currentPage);
+    }
+  }, [filters, sortBy, currentPage, loggedInUser]);
 
   const handleFilterChange = (e) => {
     setFilters({ ...filters, [e.target.name]: e.target.value });
@@ -113,12 +123,36 @@ const CompanyListPage = () => {
     setSortBy(e.target.value);
   };
 
-  const handleApply = (jobTitle) => {
-    alert(`Successfully applied to ${jobTitle}!`);
-  };
+  const handleApply = async (jobId, jobTitle) => {
+    try {
+      if (!loggedInUser || !loggedInUser._id) {
+        alert("Please log in to apply for this job.");
+        return;
+      }
 
-  const handleCreateJobPost = () => {
-    window.location.href = "/createpost";
+      const payload = {
+        user_id: loggedInUser._id,
+        job_id: jobId,
+      };
+
+      const response = await axios.post(
+        "http://localhost:3100/api/applications/apply",
+        payload
+      );
+
+      if (
+        response.data.message ===
+        "Application created and job applied successfully"
+      ) {
+        alert(`Successfully applied to ${jobTitle}!`);
+        fetchJobs(currentPage); // ✅ Optional: refresh list
+      } else {
+        alert(`Failed to apply to ${jobTitle}.`);
+      }
+    } catch (error) {
+      console.error("Error applying to job:", error);
+      alert("An error occurred while applying. Please try again.");
+    }
   };
 
   const handlePageChange = (page) => {
@@ -130,12 +164,22 @@ const CompanyListPage = () => {
     <div className="min-h-screen bg-green-50 p-8">
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-4xl font-bold text-green-700">Explore Companies</h1>
-        {loggedInUser.role === "company" && (
+
+        {loggedInUser && loggedInUser.role === "company" && (
           <button
-            onClick={handleCreateJobPost}
+            onClick={() => navigate("/createpost")}
             className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition"
           >
             Create Job Post
+          </button>
+        )}
+
+        {loggedInUser && loggedInUser.role === "user" && (
+          <button
+            onClick={() => navigate("/appliedJobs")}
+            className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition"
+          >
+            View Applied Jobs
           </button>
         )}
       </div>
@@ -232,7 +276,6 @@ const CompanyListPage = () => {
           </select>
         </div>
 
-        {/* Sort By */}
         <div>
           <label className="block text-green-700 text-sm font-medium mb-1">
             Sort By
@@ -249,7 +292,6 @@ const CompanyListPage = () => {
           </select>
         </div>
 
-        {/* Clear Filters */}
         <div className="col-span-full flex justify-center">
           <button
             onClick={() => {
@@ -305,7 +347,6 @@ const CompanyListPage = () => {
                     {job.benefits?.join(", ")}
                   </p>
 
-                  {/* Description with tooltip */}
                   <p
                     className="text-green-700 text-sm italic truncate"
                     title={job.description}
@@ -313,12 +354,16 @@ const CompanyListPage = () => {
                     {job.description}
                   </p>
                 </div>
-                <button
-                  onClick={() => handleApply(job.title)}
-                  className="mt-4 w-full bg-green-600 text-white py-2 rounded hover:bg-green-700 transition"
-                >
-                  Apply
-                </button>
+
+                {/* ✅ Only show Apply button for USER role */}
+                {loggedInUser && loggedInUser.role === "user" && (
+                  <button
+                    onClick={() => handleApply(job._id, job.title)}
+                    className="mt-4 w-full bg-green-600 text-white py-2 rounded hover:bg-green-700 transition"
+                  >
+                    Apply
+                  </button>
+                )}
               </div>
             ))}
           </div>

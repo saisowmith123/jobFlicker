@@ -4,6 +4,7 @@ import AuthPage from "./AuthPage";
 import CompanyListPage from "./CompanyListPage";
 import CreateJobPostPage from "./CreateJobPostPage";
 import FillCompanyDetailsPage from "./FillCompanyDetailsPage";
+import AppliedPage from "./AppliedPage";
 
 function App() {
   return (
@@ -16,6 +17,7 @@ function App() {
           path="/fillCompanyDetails"
           element={<FillCompanyDetailsPage />}
         />
+        <Route path="/appliedJobs" element={<AppliedPage />} />
       </Routes>
     </Router>
   );

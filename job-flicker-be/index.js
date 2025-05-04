@@ -7,6 +7,7 @@ const cors = require("cors");
 const jobUserRoutes = require("./routes/jobUserRoutes");
 const jobRoutes = require("./routes/jobRoutes");
 const companyRoutes = require("./routes/companyRoutes");
+const applicationRoutes = require("./routes/applicationRoutes");
 
 const app = express();
 const port = 3100;
@@ -29,6 +30,7 @@ app.use(
 app.use("/api", jobUserRoutes);
 app.use("/api", jobRoutes);
 app.use("/api", companyRoutes);
+app.use("/api", applicationRoutes);
 
 // Start server
 app.listen(port, () => {

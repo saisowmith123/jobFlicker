@@ -36,7 +36,7 @@ const AuthPage = () => {
         if (response.data.message === "Login successful") {
           console.log("Logged in:", response.data.user);
           localStorage.setItem("user", JSON.stringify(response.data.user));
-
+          localStorage.setItem("user_id", response.data.user._id);
           if (response.data.user.role === "company") {
             navigate("/fillCompanyDetails");
           } else {
@@ -64,6 +64,9 @@ const AuthPage = () => {
         } else {
           console.log("User created:", response.data);
           localStorage.setItem("user", JSON.stringify(response.data));
+          if (response.data._id) {
+            localStorage.setItem("user_id", response.data._id);
+          }
 
           if (response.data.role === "company") {
             navigate("/fillCompanyDetails");
