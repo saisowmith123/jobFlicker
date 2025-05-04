@@ -20,8 +20,9 @@ exports.createUser = async (req, res) => {
 exports.loginUser = async (req, res) => {
   try {
     const { email, passwordHash } = req.query;
-
-    const user = await JobUser.findOne({ email, passwordHash });
+    console.log(email, passwordHash);
+    const user = await JobUser.findOne({ email });
+    console.log(user);
     if (!user) {
       return res.status(401).json({ message: "Invalid credentials" });
     }
@@ -60,4 +61,13 @@ exports.logoutUser = (req, res) => {
     res.clearCookie("connect.sid");
     res.json({ message: "Logged out successfully" });
   });
+};
+
+exports.getAllUsers = async (req, res) => {
+  try {
+    const users = await JobUser.find();
+    res.status(200).json(users);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 };

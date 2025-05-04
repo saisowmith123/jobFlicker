@@ -3,10 +3,18 @@ const { buildMongoFilters } = require("../utils/jobFilter");
 
 exports.filterJobs = async (req, res) => {
   try {
-    const { filters = {}, page = 1, limit = 10 } = req.body;
+    const { filters = {}, sortBy = "", page = 1, limit = 10 } = req.body;
 
     const mongoFilters = buildMongoFilters(filters);
+    let sortQuery = {};
+
+    if (sortBy === "newest") {
+      sortQuery = { createdAt: -1 };
+    } else if (sortBy === "oldest") {
+      sortQuery = { createdAt: 1 };
+    }
     const jobs = await Job.find(mongoFilters)
+      .sort(sortQuery)
       .skip((page - 1) * limit)
       .limit(limit);
 

@@ -16,8 +16,8 @@ const companySchema = new mongoose.Schema(
     industry: String,
     sector: String,
     revenue: {
-      type: String,
-      default: null,
+      min: Number,
+      max: Number,
     },
     foundingYear: Number,
   },

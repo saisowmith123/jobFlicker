@@ -1,3 +1,5 @@
+const mongoose = require("mongoose");
+
 function buildMongoFilters(filters) {
   const mongoQuery = {};
 
@@ -5,6 +7,15 @@ function buildMongoFilters(filters) {
     const value = filters[key];
 
     if (value === null || value === undefined || value === "") continue;
+
+    if (key === "companyId") {
+      if (mongoose.Types.ObjectId.isValid(value)) {
+        mongoQuery["companyId"] = new mongoose.Types.ObjectId(value);
+      } else {
+        console.warn(`Invalid ObjectId for 'id': ${value}`);
+      }
+      continue;
+    }
 
     if (typeof value === "string") {
       mongoQuery[key] = { $regex: value, $options: "i" };
