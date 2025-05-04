@@ -18,7 +18,7 @@ const AppliedPage = () => {
 
         // ✅ POST to /api/jobs/byIds with { user_id }
         const response = await axios.post(
-          "http://localhost:3100/api/jobs/byIds",
+          "https://jobflicker.onrender.com/api/jobs/byIds",
           {
             user_id: userData._id,
           }

@@ -1,14 +1,25 @@
 import React from "react";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  useLocation,
+} from "react-router-dom";
 import AuthPage from "./AuthPage";
 import CompanyListPage from "./CompanyListPage";
 import CreateJobPostPage from "./CreateJobPostPage";
 import FillCompanyDetailsPage from "./FillCompanyDetailsPage";
 import AppliedPage from "./AppliedPage";
+import Navbar from "./components/Navbar";
 
-function App() {
+const AppContent = () => {
+  const location = useLocation();
+
+  const showNavbar = location.pathname !== "/";
+
   return (
-    <Router>
+    <>
+      {showNavbar && <Navbar />}
       <Routes>
         <Route path="/" element={<AuthPage />} />
         <Route path="/companies" element={<CompanyListPage />} />
@@ -19,6 +30,14 @@ function App() {
         />
         <Route path="/appliedJobs" element={<AppliedPage />} />
       </Routes>
+    </>
+  );
+};
+
+function App() {
+  return (
+    <Router>
+      <AppContent />
     </Router>
   );
 }

@@ -60,7 +60,7 @@ const CreateJobPostPage = () => {
 
     try {
       const response = await axios.post(
-        "http://localhost:3100/api/jobs",
+        "https://jobflicker.onrender.com/api/jobs",
         jobPost
       );
 

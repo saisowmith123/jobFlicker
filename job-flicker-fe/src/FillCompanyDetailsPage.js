@@ -1,81 +1,98 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
-const CreateJobPostPage = () => {
+const CompanyDetailsPage = () => {
   const [formData, setFormData] = useState({
-    title: "",
-    description: "",
-    salaryMin: "",
-    salaryMax: "",
-    salaryAvg: "",
-    rating: "",
+    name: "",
     location: "",
-    jobState: "",
-    companyAge: "",
-    jobType: "Full-Time",
-    seniority: false,
-    skills: "",
-    benefits: "",
+    headquarters: "",
+    sizeMin: "",
+    sizeMax: "",
+    ownershipType: "",
+    industry: "",
+    sector: "",
+    revenueMin: "",
+    revenueMax: "",
+    foundingYear: "",
   });
 
   const navigate = useNavigate();
 
+  // OPTIONAL: Load existing company data if you're editing
+  useEffect(() => {
+    const companyId = localStorage.getItem("companyId");
+    if (companyId) {
+      axios
+        .get(`https://jobflicker.onrender.com/api/company/${companyId}`)
+        .then((res) => {
+          const c = res.data;
+          setFormData({
+            name: c.name || "",
+            location: c.location || "",
+            headquarters: c.headquarters || "",
+            sizeMin: c.size?.min || "",
+            sizeMax: c.size?.max || "",
+            ownershipType: c.ownershipType || "",
+            industry: c.industry || "",
+            sector: c.sector || "",
+            revenueMin: c.revenue?.min || "",
+            revenueMax: c.revenue?.max || "",
+            foundingYear: c.foundingYear || "",
+          });
+        })
+        .catch((err) => {
+          console.error("Failed to load company details:", err);
+        });
+    }
+  }, []);
+
   const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    setFormData({
-      ...formData,
-      [name]: type === "checkbox" ? checked : value,
-    });
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const companyId = localStorage.getItem("companyId");
-    if (!companyId) {
-      alert("Company ID not found. Please fill in company details first.");
-      return;
-    }
-
-    const jobPost = {
-      companyId,
-      title: formData.title,
-      description: formData.description,
-      salaryEstimation: {
-        min: Number(formData.salaryMin),
-        max: Number(formData.salaryMax),
-        avg: Number(formData.salaryAvg),
-      },
-      rating: Number(formData.rating),
+    const payload = {
+      name: formData.name,
       location: formData.location,
-      jobState: formData.jobState,
-      sameState: true, // you can make this dynamic if needed
-      companyAge: Number(formData.companyAge),
-      jobType: formData.jobType,
-      seniority: formData.seniority,
-      skills: formData.skills.split(",").map((s) => s.trim()),
-      benefits: formData.benefits.split(",").map((b) => b.trim()),
+      headquarters: formData.headquarters,
+      size: {
+        min: Number(formData.sizeMin),
+        max: Number(formData.sizeMax),
+      },
+      ownershipType: formData.ownershipType,
+      industry: formData.industry,
+      sector: formData.sector,
+      revenue: {
+        min: Number(formData.revenueMin),
+        max: Number(formData.revenueMax),
+      },
+      foundingYear: Number(formData.foundingYear),
     };
 
     try {
       const response = await axios.post(
-        "http://localhost:3100/api/jobs",
-        jobPost
+        "https://jobflicker.onrender.com/api/company",
+        payload
       );
 
-      if (response.data.message === "Job created successfully") {
-        console.log("Job created:", response.data.job);
-        alert("Job post created successfully!");
+      if (response.data.message === "Company created successfully") {
+        console.log("Company created:", response.data.company);
 
-        // ✅ Navigate to the /companies page
+        // Store company ID for later use (like job posting)
+        localStorage.setItem("companyId", response.data.company._id);
+
+        alert("Company details saved successfully!");
         navigate("/companies");
       } else {
-        alert("Something went wrong while creating the job post.");
+        alert("Something went wrong while saving company details.");
       }
-    } catch (error) {
-      console.error("Error submitting job post:", error);
-      alert("Failed to submit job post. Please try again.");
+    } catch (err) {
+      console.error("Error submitting company details:", err);
+      alert("Failed to save company details. Please try again.");
     }
   };
 
@@ -83,98 +100,28 @@ const CreateJobPostPage = () => {
     <div className="min-h-screen bg-green-50 p-8 flex justify-center">
       <div className="bg-white p-8 rounded-lg shadow w-full max-w-2xl border border-green-200">
         <h1 className="text-3xl font-bold text-green-700 text-center mb-6">
-          Create Job Post
+          {localStorage.getItem("companyId")
+            ? "Edit Company Details"
+            : "Add Company Details"}
         </h1>
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Job Title */}
+          {/* Name */}
           <div>
             <label className="block text-green-700 text-sm font-medium mb-1">
-              Job Title
+              Company Name
             </label>
             <input
               type="text"
-              name="title"
-              value={formData.title}
+              name="name"
+              value={formData.name}
               onChange={handleChange}
-              className="w-full px-3 py-2 border rounded border-green-300 focus:outline-none focus:ring-2 focus:ring-green-400"
               required
+              className="w-full px-3 py-2 border rounded border-green-300 focus:outline-none focus:ring-2 focus:ring-green-400"
             />
           </div>
 
-          {/* Description */}
-          <div>
-            <label className="block text-green-700 text-sm font-medium mb-1">
-              Description
-            </label>
-            <textarea
-              name="description"
-              value={formData.description}
-              onChange={handleChange}
-              rows="5"
-              className="w-full px-3 py-2 border rounded border-green-300 focus:outline-none focus:ring-2 focus:ring-green-400"
-              required
-            ></textarea>
-          </div>
-
-          {/* Salary */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <label className="block text-green-700 text-sm font-medium mb-1">
-                Salary Min
-              </label>
-              <input
-                type="number"
-                name="salaryMin"
-                value={formData.salaryMin}
-                onChange={handleChange}
-                className="w-full px-3 py-2 border rounded border-green-300 focus:outline-none focus:ring-2 focus:ring-green-400"
-                required
-              />
-            </div>
-            <div>
-              <label className="block text-green-700 text-sm font-medium mb-1">
-                Salary Max
-              </label>
-              <input
-                type="number"
-                name="salaryMax"
-                value={formData.salaryMax}
-                onChange={handleChange}
-                className="w-full px-3 py-2 border rounded border-green-300 focus:outline-none focus:ring-2 focus:ring-green-400"
-                required
-              />
-            </div>
-            <div>
-              <label className="block text-green-700 text-sm font-medium mb-1">
-                Salary Avg
-              </label>
-              <input
-                type="number"
-                name="salaryAvg"
-                value={formData.salaryAvg}
-                onChange={handleChange}
-                className="w-full px-3 py-2 border rounded border-green-300 focus:outline-none focus:ring-2 focus:ring-green-400"
-                required
-              />
-            </div>
-          </div>
-
-          {/* Rating & Location */}
+          {/* Location + HQ */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-green-700 text-sm font-medium mb-1">
-                Rating
-              </label>
-              <input
-                type="number"
-                name="rating"
-                step="0.1"
-                value={formData.rating}
-                onChange={handleChange}
-                className="w-full px-3 py-2 border rounded border-green-300 focus:outline-none focus:ring-2 focus:ring-green-400"
-                required
-              />
-            </div>
             <div>
               <label className="block text-green-700 text-sm font-medium mb-1">
                 Location
@@ -184,111 +131,154 @@ const CreateJobPostPage = () => {
                 name="location"
                 value={formData.location}
                 onChange={handleChange}
-                className="w-full px-3 py-2 border rounded border-green-300 focus:outline-none focus:ring-2 focus:ring-green-400"
                 required
+                className="w-full px-3 py-2 border rounded border-green-300 focus:outline-none focus:ring-2 focus:ring-green-400"
               />
             </div>
-          </div>
-
-          {/* Job State & Company Age */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-green-700 text-sm font-medium mb-1">
-                Job State
+                Headquarters
               </label>
               <input
                 type="text"
-                name="jobState"
-                value={formData.jobState}
+                name="headquarters"
+                value={formData.headquarters}
                 onChange={handleChange}
-                className="w-full px-3 py-2 border rounded border-green-300 focus:outline-none focus:ring-2 focus:ring-green-400"
                 required
+                className="w-full px-3 py-2 border rounded border-green-300 focus:outline-none focus:ring-2 focus:ring-green-400"
+              />
+            </div>
+          </div>
+
+          {/* Size */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-green-700 text-sm font-medium mb-1">
+                Size Min
+              </label>
+              <input
+                type="number"
+                name="sizeMin"
+                value={formData.sizeMin}
+                onChange={handleChange}
+                required
+                className="w-full px-3 py-2 border rounded border-green-300 focus:outline-none focus:ring-2 focus:ring-green-400"
               />
             </div>
             <div>
               <label className="block text-green-700 text-sm font-medium mb-1">
-                Company Age
+                Size Max
               </label>
               <input
                 type="number"
-                name="companyAge"
-                value={formData.companyAge}
+                name="sizeMax"
+                value={formData.sizeMax}
                 onChange={handleChange}
-                className="w-full px-3 py-2 border rounded border-green-300 focus:outline-none focus:ring-2 focus:ring-green-400"
                 required
+                className="w-full px-3 py-2 border rounded border-green-300 focus:outline-none focus:ring-2 focus:ring-green-400"
               />
             </div>
           </div>
 
-          {/* Job Type */}
+          {/* Ownership Type */}
           <div>
             <label className="block text-green-700 text-sm font-medium mb-1">
-              Job Type
-            </label>
-            <select
-              name="jobType"
-              value={formData.jobType}
-              onChange={handleChange}
-              className="w-full px-3 py-2 border rounded border-green-300 focus:outline-none focus:ring-2 focus:ring-green-400"
-              required
-            >
-              <option value="Full-Time">Full-Time</option>
-              <option value="Part-Time">Part-Time</option>
-            </select>
-          </div>
-
-          {/* Seniority */}
-          <div className="flex items-center">
-            <input
-              type="checkbox"
-              name="seniority"
-              checked={formData.seniority}
-              onChange={handleChange}
-              className="mr-2 border-green-300 focus:ring-2 focus:ring-green-400"
-            />
-            <label className="text-green-700 text-sm font-medium">
-              Seniority Required
-            </label>
-          </div>
-
-          {/* Skills */}
-          <div>
-            <label className="block text-green-700 text-sm font-medium mb-1">
-              Skills (comma-separated)
+              Ownership Type
             </label>
             <input
               type="text"
-              name="skills"
-              value={formData.skills}
+              name="ownershipType"
+              value={formData.ownershipType}
               onChange={handleChange}
-              placeholder="e.g., Python, SQL"
-              className="w-full px-3 py-2 border rounded border-green-300 focus:outline-none focus:ring-2 focus:ring-green-400"
               required
+              className="w-full px-3 py-2 border rounded border-green-300 focus:outline-none focus:ring-2 focus:ring-green-400"
             />
           </div>
 
-          {/* Benefits */}
+          {/* Industry */}
           <div>
             <label className="block text-green-700 text-sm font-medium mb-1">
-              Benefits (comma-separated)
+              Industry
             </label>
             <input
               type="text"
-              name="benefits"
-              value={formData.benefits}
+              name="industry"
+              value={formData.industry}
               onChange={handleChange}
-              placeholder="e.g., Health Insurance, 401k"
-              className="w-full px-3 py-2 border rounded border-green-300 focus:outline-none focus:ring-2 focus:ring-green-400"
               required
+              className="w-full px-3 py-2 border rounded border-green-300 focus:outline-none focus:ring-2 focus:ring-green-400"
             />
           </div>
 
-          {/* Submit Button */}
+          {/* Sector */}
+          <div>
+            <label className="block text-green-700 text-sm font-medium mb-1">
+              Sector
+            </label>
+            <input
+              type="text"
+              name="sector"
+              value={formData.sector}
+              onChange={handleChange}
+              required
+              className="w-full px-3 py-2 border rounded border-green-300 focus:outline-none focus:ring-2 focus:ring-green-400"
+            />
+          </div>
+
+          {/* Revenue */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-green-700 text-sm font-medium mb-1">
+                Revenue Min
+              </label>
+              <input
+                type="number"
+                name="revenueMin"
+                value={formData.revenueMin}
+                onChange={handleChange}
+                required
+                placeholder="e.g., 1000"
+                className="w-full px-3 py-2 border rounded border-green-300 focus:outline-none focus:ring-2 focus:ring-green-400"
+              />
+            </div>
+            <div>
+              <label className="block text-green-700 text-sm font-medium mb-1">
+                Revenue Max
+              </label>
+              <input
+                type="number"
+                name="revenueMax"
+                value={formData.revenueMax}
+                onChange={handleChange}
+                required
+                placeholder="e.g., 2000"
+                className="w-full px-3 py-2 border rounded border-green-300 focus:outline-none focus:ring-2 focus:ring-green-400"
+              />
+            </div>
+          </div>
+
+          {/* Founding Year */}
+          <div>
+            <label className="block text-green-700 text-sm font-medium mb-1">
+              Founding Year
+            </label>
+            <input
+              type="number"
+              name="foundingYear"
+              value={formData.foundingYear}
+              onChange={handleChange}
+              required
+              placeholder="e.g., 1968"
+              className="w-full px-3 py-2 border rounded border-green-300 focus:outline-none focus:ring-2 focus:ring-green-400"
+            />
+          </div>
+
+          {/* Submit */}
           <button
             type="submit"
             className="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700 transition"
           >
-            Submit Job Post
+            Save Company Details
           </button>
         </form>
       </div>
@@ -296,4 +286,4 @@ const CreateJobPostPage = () => {
   );
 };
 
-export default CreateJobPostPage;
+export default CompanyDetailsPage;

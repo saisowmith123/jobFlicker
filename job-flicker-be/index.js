@@ -18,7 +18,7 @@ connectDB();
 // CORS setup
 app.use(
   cors({
-    origin: ["https://your-frontend.onrender.com", "http://localhost:3000"],
+    origin: ["https://jobflicker-fe.onrender.com", "http://localhost:3000"],
     credentials: true,
   })
 );

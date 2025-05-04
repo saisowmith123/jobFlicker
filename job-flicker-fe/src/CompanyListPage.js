@@ -78,7 +78,7 @@ const CompanyListPage = () => {
 
     try {
       const response = await axios.post(
-        "http://localhost:3100/api/jobs/filter",
+        "https://jobflicker.onrender.com/api/jobs/filter",
         payload
       );
 
@@ -136,7 +136,7 @@ const CompanyListPage = () => {
       };
 
       const response = await axios.post(
-        "http://localhost:3100/api/applications/apply",
+        "https://jobflicker.onrender.com/api/applications/apply",
         payload
       );
 

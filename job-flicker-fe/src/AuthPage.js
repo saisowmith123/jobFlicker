@@ -55,7 +55,7 @@ const AuthPage = () => {
         };
 
         const response = await axios.post(
-          `http://localhost:3100/api/users`,
+          `https://jobflicker.onrender.com/api/users`,
           signupPayload
         );
 
