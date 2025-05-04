@@ -10,11 +10,19 @@ const companyRoutes = require("./routes/companyRoutes");
 const applicationRoutes = require("./routes/applicationRoutes");
 
 const app = express();
-const port = 3100;
+const port = process.env.PORT || 3100;
 
 // Connect to MongoDB
 connectDB();
-app.use(cors());
+
+// CORS setup
+app.use(
+  cors({
+    origin: ["https://your-frontend.onrender.com", "http://localhost:3000"],
+    credentials: true,
+  })
+);
+
 // Middleware
 app.use(express.json());
 app.use(
@@ -34,5 +42,5 @@ app.use("/api", applicationRoutes);
 
 // Start server
 app.listen(port, () => {
-  console.log(`Server is running on http://localhost:${port}`);
+  console.log(`🚀 Server is running on port ${port}`);
 });
